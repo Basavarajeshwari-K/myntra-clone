@@ -23,7 +23,7 @@ interface Product {
   description?: string;
 }
 
-const BASE_URL = "http://192.168.1.2:5000";
+const API_URL = "https://myntra-clone-wkhe.onrender.com/api/orders";
 
 const YouMayAlsoLike: React.FC = () => {
   const router = useRouter();

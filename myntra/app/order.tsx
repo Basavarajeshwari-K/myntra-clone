@@ -61,11 +61,8 @@ const Order = () => {
     ToastAndroid.show(message, ToastAndroid.SHORT);
   };
 
-  const API_URL =
-    Platform.OS === "android"
-      ? "http://192.168.1.2:5000/api/orders"
-      : "http://localhost:5000/api/orders";
-
+  const API_URL = "https://myntra-clone-wkhe.onrender.com/api/orders";
+    
   // 🔔 LOCAL NOTIFICATION FUNCTION
   const showLocalNotification = async (title: string, body: string) => {
     await Notifications.scheduleNotificationAsync({

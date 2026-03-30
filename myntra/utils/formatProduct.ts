@@ -1,4 +1,4 @@
-const BASE_URL = "http://192.168.1.2:5000";
+const BASE_URL = "https://myntra-clone-wkhe.onrender.com";
 
 export interface FormattedProduct {
   _id?: string;

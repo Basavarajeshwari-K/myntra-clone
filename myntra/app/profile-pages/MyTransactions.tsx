@@ -25,7 +25,7 @@ interface Transaction {
   transactionType: string;
 }
 
-const BASE_URL = "http://192.168.1.2:5000/api";
+const BASE_URL = "https://myntra-clone-wkhe.onrender.com/api";
 
 // ✅ FIXED: directly define userId (removed extra state + useEffect)
 const userId = "rajeshwari";

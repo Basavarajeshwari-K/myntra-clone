@@ -36,7 +36,7 @@ interface Product {
   sizes?: string[];
 }
 
-const BASE_URL = "http://192.168.1.2:5000";
+const BASE_URL = "https://myntra-clone-wkhe.onrender.com"
 const CURRENT_USER_ID = "rajeshwarik";
 
 // ✅ FULLY FIXED IMAGE FUNCTION

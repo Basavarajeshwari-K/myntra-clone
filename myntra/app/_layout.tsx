@@ -7,7 +7,7 @@ import { WishlistProvider } from "../context/WishlistContext";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 
-const BASE_URL = "http://192.168.1.2:5000";
+const BASE_URL = "https://myntra-clone-wkhe.onrender.com";
 const CURRENT_USER_ID = "rajeshwarik";
 
 // Global notification handler (only once in app)
