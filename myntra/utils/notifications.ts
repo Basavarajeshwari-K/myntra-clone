@@ -1,7 +1,6 @@
 import { Platform } from "react-native";
 
 const BASE_URL = "https://myntra-clone-wkhe.onrender.com";
-
 const CURRENT_USER_ID = "rajeshwarik";
 
 // Only import expo-notifications and expo-device if not web
@@ -38,11 +37,11 @@ export async function registerAndSendPushToken() {
     console.log("Push Token:", token);
 
     try {
-      const response = await fetch(`${BACKEND_URL}/push/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, userId: CURRENT_USER_ID }),
-      });
+      const response = await fetch(`${BASE_URL}/push/register`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ token, userId: CURRENT_USER_ID }),
+});
       const contentType = response.headers.get("content-type");
       if (contentType?.includes("application/json")) {
         const data = await response.json();
@@ -76,7 +75,7 @@ export async function sendPushNotification(
   body: string
 ) {
   try {
-    await fetch(`${BACKEND_URL}/push/send`, {
+    await fetch(`${BASE_URL}/push/send`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId, title, body }),

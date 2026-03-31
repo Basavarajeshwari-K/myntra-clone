@@ -23,13 +23,15 @@ interface Product {
   description?: string;
 }
 
-const API_URL = "https://myntra-clone-wkhe.onrender.com/api/orders";
+// ✅ BASE URL (important)
+const BASE_URL = "https://myntra-clone-wkhe.onrender.com";
 
 const YouMayAlsoLike: React.FC = () => {
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // ✅ FETCH PRODUCTS (fixed)
   useEffect(() => {
     fetch(`${BASE_URL}/api/products`)
       .then((res) => res.json())
@@ -43,24 +45,15 @@ const YouMayAlsoLike: React.FC = () => {
       });
   }, []);
 
-  const getImageUrl = (image?: string) => {
-    if (!image) return "";
+  // ✅ FINAL IMAGE FUNCTION (clean + working)
+  const getFinalImage = (image?: string) => {
+    if (!image) return "https://via.placeholder.com/140";
 
-    let finalPath = image;
+    // Full URL (Pexels or backend)
+    if (image.startsWith("http")) return image;
 
-    if (finalPath.startsWith("http")) {
-      finalPath = finalPath.replace("/uploads/uploads/", "/uploads/");
-      return encodeURI(finalPath);
-    }
-
-    finalPath = finalPath.replace(/\/+/g, "/").replace(/^\/+/, "");
-    finalPath = finalPath.replace("uploads/uploads/", "uploads/");
-
-    if (!finalPath.startsWith("uploads/")) {
-      finalPath = `uploads/${finalPath}`;
-    }
-
-    return encodeURI(`${BASE_URL}/${finalPath}`);
+    // Backend uploads image
+    return `${BASE_URL}/${image}`;
   };
 
   if (loading) {
@@ -80,7 +73,7 @@ const YouMayAlsoLike: React.FC = () => {
       ? item.price - Math.round((item.price * item.offer) / 100)
       : item.price;
 
-    const imageUrl = getImageUrl(item.image);
+    const imageUrl = getFinalImage(item.image);
 
     return (
       <TouchableOpacity
