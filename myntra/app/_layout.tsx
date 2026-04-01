@@ -1,16 +1,16 @@
 import { useEffect } from "react";
-import { Stack } from "expo-router";
-import { AuthProvider } from "../context/AuthContext";
+import { Stack, Redirect } from "expo-router";
+import { AuthProvider, useAuth } from "../context/AuthContext";
 import { CartProvider } from "../context/CartContext";
 import { ThemeProvider } from "../context/ThemeContext";
 import { WishlistProvider } from "../context/WishlistContext";
 import * as Notifications from "expo-notifications";
-import { Platform } from "react-native";
+import { Platform, ActivityIndicator, View } from "react-native";
 
 const BASE_URL = "https://myntra-clone-wkhe.onrender.com";
 const CURRENT_USER_ID = "rajeshwarik";
 
-// Global notification handler (only once in app)
+// Global notification handler
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowBanner: true,
@@ -27,8 +27,6 @@ export default function RootLayout() {
 
     const setupPushNotifications = async () => {
       try {
-
-        // Android notification channel
         if (Platform.OS === "android") {
           await Notifications.setNotificationChannelAsync("default", {
             name: "default",
@@ -37,7 +35,6 @@ export default function RootLayout() {
           });
         }
 
-        // Request permission
         const { status: existingStatus } =
           await Notifications.getPermissionsAsync();
 
@@ -53,13 +50,11 @@ export default function RootLayout() {
           return;
         }
 
-        // Get Expo push token
         const token = await Notifications.getExpoPushTokenAsync();
         const pushTokenValue = token.data;
 
         console.log("Push Token:", pushTokenValue);
 
-        // Register token with backend
         await fetch(`${BASE_URL}/api/push/register`, {
           method: "POST",
           headers: {
@@ -71,19 +66,16 @@ export default function RootLayout() {
           }),
         });
 
-        // Foreground notification listener
         notificationListener =
           Notifications.addNotificationReceivedListener((notification) => {
             console.log("Foreground notification:", notification);
           });
 
-        // Tap notification listener
         responseListener =
           Notifications.addNotificationResponseReceivedListener((response) => {
             const data = response.notification.request.content.data;
             console.log("User tapped notification:", data);
           });
-
       } catch (err) {
         console.log("Push setup error:", err);
       }
@@ -102,10 +94,32 @@ export default function RootLayout() {
       <AuthProvider>
         <CartProvider>
           <WishlistProvider>
-            <Stack screenOptions={{ headerShown: false }} />
+            <MainLayout />
           </WishlistProvider>
         </CartProvider>
       </AuthProvider>
     </ThemeProvider>
   );
+}
+
+// 🔥 THIS IS THE IMPORTANT PART
+function MainLayout() {
+  const { user, loading } = useAuth();
+
+  // ⏳ wait for auth check
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  // ❌ not logged in → go to login
+  if (!user) {
+    return <Redirect href="/login" />;
+  }
+
+  // ✅ logged in → allow app
+  return <Stack screenOptions={{ headerShown: false }} />;
 }

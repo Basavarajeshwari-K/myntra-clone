@@ -23,7 +23,6 @@ interface Product {
   description?: string;
 }
 
-// ✅ BASE URL (important)
 const BASE_URL = "https://myntra-clone-wkhe.onrender.com";
 
 const YouMayAlsoLike: React.FC = () => {
@@ -31,7 +30,6 @@ const YouMayAlsoLike: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // ✅ FETCH PRODUCTS (fixed)
   useEffect(() => {
     fetch(`${BASE_URL}/api/products`)
       .then((res) => res.json())
@@ -45,25 +43,16 @@ const YouMayAlsoLike: React.FC = () => {
       });
   }, []);
 
-  // ✅ FINAL IMAGE FUNCTION (clean + working)
+  // Robust helper to get final image URL
   const getFinalImage = (image?: string) => {
     if (!image) return "https://via.placeholder.com/140";
-
-    // Full URL (Pexels or backend)
     if (image.startsWith("http")) return image;
-
-    // Backend uploads image
-    return `${BASE_URL}/${image}`;
+    const cleanPath = image.replace(/^\/+/, ""); // remove leading slashes
+    return `${BASE_URL}/${cleanPath}`;
   };
 
   if (loading) {
-    return (
-      <ActivityIndicator
-        size="large"
-        color="#000"
-        style={{ marginTop: 50 }}
-      />
-    );
+    return <ActivityIndicator size="large" color="#000" style={{ marginTop: 50 }} />;
   }
 
   const displayProducts = products.slice(0, 6);
@@ -93,11 +82,7 @@ const YouMayAlsoLike: React.FC = () => {
           })
         }
       >
-        <Image
-          source={{ uri: imageUrl }}
-          style={styles.image}
-          resizeMode="cover"
-        />
+        <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="cover" />
 
         <Text style={styles.brand}>{item.brand || "Unknown Brand"}</Text>
 
@@ -110,17 +95,14 @@ const YouMayAlsoLike: React.FC = () => {
           {item.offer ? (
             <>
               {" "}
-              <Text style={styles.originalPrice}>₹{item.price}</Text>{" "}
-              ({item.offer}% OFF)
+              <Text style={styles.originalPrice}>₹{item.price}</Text> ({item.offer}% OFF)
             </>
           ) : null}
         </Text>
 
-        {item.sizes && item.sizes.length > 0 ? (
-          <Text style={styles.sizes}>Sizes: {item.sizes.join(", ")}</Text>
-        ) : (
-          <Text style={styles.sizes}>Sizes: N/A</Text>
-        )}
+        <Text style={styles.sizes}>
+          Sizes: {item.sizes && item.sizes.length > 0 ? item.sizes.join(", ") : "N/A"}
+        </Text>
       </TouchableOpacity>
     );
   };
@@ -142,14 +124,7 @@ const YouMayAlsoLike: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: { marginVertical: 10 },
-
-  title: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 8,
-    marginLeft: 10,
-  },
-
+  title: { fontSize: 18, fontWeight: "bold", marginBottom: 8, marginLeft: 10 },
   card: {
     width: 160,
     marginHorizontal: 5,
@@ -162,35 +137,11 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 3,
   },
-
-  image: {
-    width: 140,
-    height: 140,
-    borderRadius: 10,
-    marginBottom: 5,
-  },
-
+  image: { width: 140, height: 140, borderRadius: 10, marginBottom: 5 },
   brand: { fontSize: 12, color: "#555" },
-
-  name: {
-    fontSize: 14,
-    fontWeight: "500",
-    textAlign: "center",
-  },
-
-  price: {
-    fontSize: 13,
-    color: "#888",
-    marginTop: 2,
-    textAlign: "center",
-  },
-
-  originalPrice: {
-    textDecorationLine: "line-through",
-    color: "#777",
-    fontSize: 12,
-  },
-
+  name: { fontSize: 14, fontWeight: "500", textAlign: "center" },
+  price: { fontSize: 13, color: "#888", marginTop: 2, textAlign: "center" },
+  originalPrice: { textDecorationLine: "line-through", color: "#777", fontSize: 12 },
   sizes: { fontSize: 12, color: "#555", marginTop: 2 },
 });
 

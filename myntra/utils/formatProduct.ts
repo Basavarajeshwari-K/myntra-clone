@@ -35,18 +35,17 @@ export const formatProduct = (product: any): FormattedProduct | null => {
   } catch {
     // ignore decode errors
   }
+// Clean path properly
+image = image
+  .replace(/\\/g, "/")     // backslashes → forward slashes
+  .replace(/\/+/g, "/")    // multiple slashes → single
+  .replace(/^\/+/, "");    // remove starting slash
 
-  // Remove duplicate uploads path
-  image = image.replace("/uploads/uploads/", "/uploads/");
-
-  // Prefix backend URL if needed
-  if (!image.startsWith("http")) {
-    if (image.startsWith("/")) {
-      image = `${BASE_URL}${image}`;
-    } else {
-      image = `${BASE_URL}/uploads/${image}`;
-    }
-  }
+// If already full URL → keep it
+if (!image.startsWith("http")) {
+  image = `${BASE_URL}/${image}`;
+}
+  
 
   // ---------- BRAND ----------
   let brand = product.brand;

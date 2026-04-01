@@ -239,13 +239,10 @@ const renderRecommendedItem = ({ item }: { item: FormattedProduct }) => {
       }
     >
       <Image
-        source={
-         typeof item.image === "string"
-          ? { uri: item.image }
-         : item.image
-        }
-      style={styles.recommendedImage}
+      source={{ uri: getImageUrl(item.image) }}
+    style={styles.recommendedImage}
     />
+       
 
       <Text
         style={[styles.recommendedName, { color: colors.text }]}
@@ -283,13 +280,9 @@ const renderRecommendedItem = ({ item }: { item: FormattedProduct }) => {
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={{ paddingBottom: 30 }}>
       <View style={styles.imageWrapper}>
         <Image
-           source={
-            typeof safeProduct.image === "string"
-            ? { uri: safeProduct.image }
-           : safeProduct.image
-         }
-        style={styles.image}
-     />
+  source={{ uri: getImageUrl(safeProduct.image) }}
+  style={styles.image}
+/>
         <TouchableOpacity
           style={styles.wishlistIcon}
           onPress={() =>

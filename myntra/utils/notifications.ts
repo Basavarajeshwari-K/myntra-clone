@@ -37,7 +37,7 @@ export async function registerAndSendPushToken() {
     console.log("Push Token:", token);
 
     try {
-      const response = await fetch(`${BASE_URL}/push/register`, {
+      const response = await fetch(`${BASE_URL}/api/push/register`, {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ token, userId: CURRENT_USER_ID }),

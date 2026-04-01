@@ -15,7 +15,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 
 export default function Login() {
-  const { login, user } = useAuth();
+  const { login, user, loading } = useAuth();
   const { isDark } = useTheme();
   const router = useRouter();
 
@@ -25,10 +25,10 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (user) {
-      router.replace("/(tabs)");
-    }
-  }, [user]);
+  if (!loading && user) {
+    router.replace("/(tabs)");
+  }
+}, [user, loading]);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -56,8 +56,16 @@ export default function Login() {
     placeholder: isDark ? "#888" : "#999",
     eye: isDark ? "#aaa" : "#666",
   };
-
+     
+   if (loading) {
   return (
+    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <ActivityIndicator size="large" />
+    </View>
+  );
+}
+
+return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
       <Image
         source={{
