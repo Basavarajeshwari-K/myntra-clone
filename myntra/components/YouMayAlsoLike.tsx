@@ -46,10 +46,10 @@ const YouMayAlsoLike: React.FC = () => {
   // Robust helper to get final image URL
   const getFinalImage = (image?: string) => {
   if (!image) return "https://via.placeholder.com/140";
-
   if (image.startsWith("http")) return image;
 
-  return `${BASE_URL}${image}`;
+  // Remove duplicate slashes
+  return `${BASE_URL}/${image.replace(/^\/+/, "")}`;
 };
   if (loading) {
     return <ActivityIndicator size="large" color="#000" style={{ marginTop: 50 }} />;
