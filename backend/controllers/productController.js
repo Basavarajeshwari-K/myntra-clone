@@ -4,7 +4,7 @@ const History = require("../models/historyModel");
 const Wishlist = require("../models/wishlistModel");
 const UserActivity = require("../models/UserActivityModel");
 
-const BASE_URL = "http://192.168.1.2:5000";
+const BASE_URL = "https://myntra-clone-wkhe.onrender.com";
 
 // ================= CREATE PRODUCT =================
 const createProduct = async (req, res) => {

@@ -102,7 +102,7 @@ export default function RootLayout() {
   );
 }
 
-// 🔥 THIS IS THE IMPORTANT PART
+// 🔥 AUTH ROUTING
 function MainLayout() {
   const { user, loading } = useAuth();
 
@@ -117,7 +117,7 @@ function MainLayout() {
 
   // ❌ not logged in → go to login
   if (!user) {
-    return <Redirect href="/login" />;
+    return <Redirect href="/(auth)/login" />;
   }
 
   // ✅ logged in → allow app
