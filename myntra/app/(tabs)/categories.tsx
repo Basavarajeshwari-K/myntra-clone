@@ -258,13 +258,12 @@ export default function Category() {
     <TouchableOpacity
       key={item.id}
       style={[styles.productCard, { backgroundColor: colors.card }]}
-      onPress={() =>
-        router.push({
-          pathname: "/product",
-          params: { product: JSON.stringify(item) },
-        })
-      }
-    >
+      onPress={() => {
+  router.push(
+     `/product?product=${encodeURIComponent(JSON.stringify(item))}`
+     );
+   }}
+  >
       <Image source={{ uri: item.image }} style={styles.productImage} />
       <Text style={[styles.brand, { color: colors.text }]}>{item.brand}</Text>
       <Text style={[styles.name, { color: colors.text }]}>{item.name}</Text>
