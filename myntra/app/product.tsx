@@ -45,12 +45,12 @@ const getImageUrl = (image?: string) => {
   // if already full URL
   if (image.startsWith("http")) return image;
 
-  // clean path
   let cleaned = image
     .replace(/\\/g, "/")
-    .replace(/^\/+/, "");
+    .replace(/^\/+/, "")
+    .replace(/uploads\/uploads\//g, "uploads/"); // 🔥 FIX DOUBLE UPLOADS
 
-  // 🔥 IMPORTANT: always ensure /uploads/
+  // add uploads only if missing
   if (!cleaned.startsWith("uploads/")) {
     cleaned = `uploads/${cleaned}`;
   }
