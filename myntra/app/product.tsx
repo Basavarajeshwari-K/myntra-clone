@@ -39,20 +39,21 @@ interface Product {
 const BASE_URL = "https://myntra-clone-wkhe.onrender.com";
 const CURRENT_USER_ID = "rajeshwarik";
 
-// ✅ IMAGE FIX FUNCTION (unchanged)
 const getImageUrl = (image?: string) => {
   if (!image) return "https://via.placeholder.com/140";
 
+  // if already full URL
+  if (image.startsWith("http")) return image;
+
+  // clean path
   let cleaned = image
     .replace(/\\/g, "/")
-    .replace(/\/+/g, "/")
-    .replace(/uploads\/uploads\//g, "uploads/")
     .replace(/^\/+/, "");
 
-  if (image.startsWith("http"))
-    return cleaned.startsWith("http")
-      ? cleaned
-      : `${BASE_URL}/${cleaned}`;
+  // 🔥 IMPORTANT: always ensure /uploads/
+  if (!cleaned.startsWith("uploads/")) {
+    cleaned = `uploads/${cleaned}`;
+  }
 
   return `${BASE_URL}/${cleaned}`;
 };
