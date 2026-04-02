@@ -36,24 +36,24 @@ interface Product {
   sizes?: string[];
 }
 
-const BASE_URL = "https://myntra-clone-wkhe.onrender.com"
+const BASE_URL = "https://myntra-clone-wkhe.onrender.com";
 const CURRENT_USER_ID = "rajeshwarik";
 
-// ✅ FULLY FIXED IMAGE FUNCTION
+// ✅ IMAGE FIX FUNCTION (unchanged)
 const getImageUrl = (image?: string) => {
   if (!image) return "https://via.placeholder.com/140";
 
-  // Remove duplicate 'uploads/' and extra slashes
   let cleaned = image
-    .replace(/\\/g, "/")                 // backslashes → forward slashes
-    .replace(/\/+/g, "/")                // multiple slashes → single slash
-    .replace(/uploads\/uploads\//g, "uploads/") // remove duplicate uploads/
-    .replace(/^\/+/, "");                // remove starting slash
+    .replace(/\\/g, "/")
+    .replace(/\/+/g, "/")
+    .replace(/uploads\/uploads\//g, "uploads/")
+    .replace(/^\/+/, "");
 
-  // If image is already a full URL
-  if (image.startsWith("http")) return cleaned.startsWith("http") ? cleaned : `${BASE_URL}/${cleaned}`;
+  if (image.startsWith("http"))
+    return cleaned.startsWith("http")
+      ? cleaned
+      : `${BASE_URL}/${cleaned}`;
 
-  // Otherwise, construct full URL
   return `${BASE_URL}/${cleaned}`;
 };
 
@@ -91,14 +91,30 @@ async function scheduleLocalCartReminder(cartItems: CartItem[]) {
 }
 
 export default function ProductDetail() {
-  const { product, productData } = useLocalSearchParams<{ product?: string; productData?: string }>();
-  const parsedProduct: Product = productData
-    ? JSON.parse(decodeURIComponent(productData))
-    : product
-    ? JSON.parse(decodeURIComponent(product))
-    : ({} as Product);
+  const { product, productData } = useLocalSearchParams<{
+    product?: string;
+    productData?: string;
+  }>();
 
-  const safeProduct: FormattedProduct = formatProduct(parsedProduct) || ({} as FormattedProduct);
+  // ✅ FIXED PARSING
+  let parsedProduct: Product = {} as Product;
+
+  try {
+    if (typeof product === "string") {
+      parsedProduct = JSON.parse(product);
+    } else if (typeof productData === "string") {
+      parsedProduct = JSON.parse(productData);
+    }
+  } catch (error) {
+    console.log("Parsing error:", error);
+  }
+
+  // ✅ DEBUG LOGS
+  console.log("FINAL PRODUCT:", parsedProduct);
+  console.log("IMAGE:", parsedProduct?.image);
+
+  const safeProduct: FormattedProduct =
+    formatProduct(parsedProduct) || ({} as FormattedProduct);
 
   const router = useRouter();
   const { bagItems, setBagItems } = useCart();
@@ -123,9 +139,13 @@ export default function ProductDetail() {
       });
     }
 
-    const subscription = Notifications.addNotificationReceivedListener(notification => {
-      Alert.alert("Notification received!", notification.request.content.body || "");
-    });
+    const subscription =
+      Notifications.addNotificationReceivedListener(notification => {
+        Alert.alert(
+          "Notification received!",
+          notification.request.content.body || ""
+        );
+      });
 
     return () => subscription.remove();
   }, []);
@@ -138,69 +158,74 @@ export default function ProductDetail() {
   }, [productId]);
 
   const handleAddToBag = async () => {
-  if (!selectedSize) {
-    Alert.alert("Select Size", "Please select a size before adding to bag");
-    return;
-  }
+    if (!selectedSize) {
+      Alert.alert(
+        "Select Size",
+        "Please select a size before adding to bag"
+      );
+      return;
+    }
 
-  const item: CartItem = {
-    id: productId!,
-    name: safeProduct.name,
-    brand: safeProduct.brand,
-    price: finalPrice,
-    image: getImageUrl(safeProduct.image),
-    size: selectedSize,
-    qty: 1,
+    const item: CartItem = {
+      id: productId!,
+      name: safeProduct.name,
+      brand: safeProduct.brand,
+      price: finalPrice,
+      image: getImageUrl(safeProduct.image),
+      size: selectedSize,
+      qty: 1,
+    };
+
+    const index = bagItems.findIndex(
+      b => b.id === item.id && b.size === item.size
+    );
+    const updatedBag = [...bagItems];
+
+    if (index >= 0) updatedBag[index].qty += 1;
+    else updatedBag.push(item);
+
+    setBagItems(updatedBag);
+    await AsyncStorage.setItem("@my_app_bag", JSON.stringify(updatedBag));
+
+    try {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "Added to Bag 🛍️",
+          body: `${safeProduct.name} (${selectedSize}) added to your bag`,
+          sound: true,
+        },
+        trigger: null,
+      });
+    } catch (err) {
+      console.log("Notification error:", err);
+    }
+
+    try {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "Complete Your Purchase ⏰",
+          body: `${safeProduct.name} is waiting in your bag.`,
+          sound: true,
+        },
+        trigger: {
+          seconds: 60,
+          channelId: "default",
+        },
+      });
+    } catch (err) {
+      console.log("Reminder notification error:", err);
+    }
+
+    Alert.alert("Added to Bag", `${safeProduct.name} (${selectedSize})`);
+    setTimeout(() => router.push("/checkout"), 400);
   };
-
-  const index = bagItems.findIndex(b => b.id === item.id && b.size === item.size);
-  const updatedBag = [...bagItems];
-
-  if (index >= 0) updatedBag[index].qty += 1;
-  else updatedBag.push(item);
-
-  setBagItems(updatedBag);
-  await AsyncStorage.setItem("@my_app_bag", JSON.stringify(updatedBag));
-
-  // 🔔 LOCAL PHONE NOTIFICATION
-  try {
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: "Added to Bag 🛍️",
-        body: `${safeProduct.name} (${selectedSize}) added to your bag`,
-        sound: true,
-      },
-      trigger: null,
-    });
-  } catch (err) {
-    console.log("Notification error:", err);
-  }
-
-  // 🔔 60 SECOND REMINDER NOTIFICATION
-  try {
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: "Complete Your Purchase ⏰",
-        body: `${safeProduct.name} is waiting in your bag. Checkout before it sells out!`,
-        sound: true,
-      },
-      trigger: {
-        seconds: 60,
-        channelId: "default",
-      },
-    });
-  } catch (err) {
-    console.log("Reminder notification error:", err);
-  }
-
-  Alert.alert("Added to Bag", `${safeProduct.name} (${selectedSize})`);
-  setTimeout(() => router.push("/checkout"), 400);
-};
 
   const fetchProductWithUserId = async () => {
     if (!productId) return;
     try {
-      await fetch(`${BASE_URL}/api/products/${productId}?userId=${CURRENT_USER_ID}`);
+      await fetch(
+        `${BASE_URL}/api/products/${productId}?userId=${CURRENT_USER_ID}`
+      );
     } catch (error) {
       console.log("Failed to update product history:", error);
     }
@@ -210,10 +235,12 @@ export default function ProductDetail() {
     if (!productId) return;
     try {
       setLoading(true);
-      const res = await fetch(`${BASE_URL}/api/products/recommendations/${productId}?userId=${CURRENT_USER_ID}`);
+      const res = await fetch(
+        `${BASE_URL}/api/products/recommendations/${productId}?userId=${CURRENT_USER_ID}`
+      );
       const data = await res.json();
       const formatted = Array.isArray(data)
-        ? data.map(formatProduct).filter(Boolean) as FormattedProduct[]
+        ? (data.map(formatProduct).filter(Boolean) as FormattedProduct[])
         : [];
       setRecommended(formatted);
     } catch (error) {
@@ -223,42 +250,48 @@ export default function ProductDetail() {
     }
   };
 
-const renderRecommendedItem = ({ item }: { item: FormattedProduct }) => {
-  console.log("Recommended product:", item.name, item.image);
+  const renderRecommendedItem = ({
+    item,
+  }: {
+    item: FormattedProduct;
+  }) => {
+    const sizes =
+      item.sizes && item.sizes.length > 0
+        ? item.sizes.join(", ")
+        : "N/A";
 
-  const sizes =
-    item.sizes && item.sizes.length > 0
-      ? item.sizes.join(", ")
-      : "N/A";
-
-  return (
-    <TouchableOpacity
-      style={styles.recommendedItem}
-      onPress={() =>
-        router.push(`/product?product=${encodeURIComponent(JSON.stringify(item))}`)
-      }
-    >
-      <Image
-      source={{ uri: getImageUrl(item.image) }}
-    style={styles.recommendedImage}
-    />
-       
-
-      <Text
-        style={[styles.recommendedName, { color: colors.text }]}
-        numberOfLines={1}
+    return (
+      <TouchableOpacity
+        style={styles.recommendedItem}
+        onPress={() =>
+          router.push({
+            pathname: "/product",
+            params: {
+              product: JSON.stringify(item),
+            },
+          })
+        }
       >
-        {item.name}
-      </Text>
+        <Image
+          source={{ uri: getImageUrl(item.image) }}
+          style={styles.recommendedImage}
+        />
 
-      <Text style={styles.recommendedPrice}>₹{item.price}</Text>
+        <Text
+          style={[styles.recommendedName, { color: colors.text }]}
+          numberOfLines={1}
+        >
+          {item.name}
+        </Text>
 
-      <Text style={{ fontSize: 12, color: "#555", marginTop: 2 }}>
-        Sizes: {sizes}
-      </Text>
-    </TouchableOpacity>
-  );
-};
+        <Text style={styles.recommendedPrice}>₹{item.price}</Text>
+
+        <Text style={{ fontSize: 12, color: "#555", marginTop: 2 }}>
+          Sizes: {sizes}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
 
   if (!safeProduct || !productId) {
     return (
@@ -277,12 +310,16 @@ const renderRecommendedItem = ({ item }: { item: FormattedProduct }) => {
   }
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={{ paddingBottom: 30 }}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      contentContainerStyle={{ paddingBottom: 30 }}
+    >
       <View style={styles.imageWrapper}>
         <Image
-  source={{ uri: getImageUrl(safeProduct.image) }}
-  style={styles.image}
-/>
+          source={{ uri: getImageUrl(safeProduct.image) }}
+          style={styles.image}
+        />
+
         <TouchableOpacity
           style={styles.wishlistIcon}
           onPress={() =>
@@ -298,18 +335,32 @@ const renderRecommendedItem = ({ item }: { item: FormattedProduct }) => {
             })
           }
         >
-          <Heart size={26} color={isFavorite ? "red" : "#fff"} fill={isFavorite ? "red" : "transparent"} />
+          <Heart
+            size={26}
+            color={isFavorite ? "red" : "#fff"}
+            fill={isFavorite ? "red" : "transparent"}
+          />
         </TouchableOpacity>
       </View>
 
       <Card style={styles.infoCard}>
-        <Text style={[styles.brandText, { color: colors.subText }]}>{safeProduct.brand}</Text>
-        <Text style={[styles.productName, { color: colors.text }]}>{safeProduct.name}</Text>
-        <Text style={[styles.description, { color: colors.subText }]}>{safeProduct.description}</Text>
+        <Text style={[styles.brandText, { color: colors.subText }]}>
+          {safeProduct.brand}
+        </Text>
+        <Text style={[styles.productName, { color: colors.text }]}>
+          {safeProduct.name}
+        </Text>
+        <Text style={[styles.description, { color: colors.subText }]}>
+          {safeProduct.description}
+        </Text>
 
         <View style={styles.priceRow}>
           <Text style={styles.finalPrice}>₹{finalPrice}</Text>
-          {safeProduct.offer && <Text style={styles.offerText}>{safeProduct.offer}% OFF</Text>}
+          {safeProduct.offer && (
+            <Text style={styles.offerText}>
+              {safeProduct.offer}% OFF
+            </Text>
+          )}
         </View>
 
         <Text style={styles.selectSizeText}>Select Size</Text>
@@ -317,31 +368,56 @@ const renderRecommendedItem = ({ item }: { item: FormattedProduct }) => {
           {safeProduct.sizes?.map(size => (
             <TouchableOpacity
               key={size}
-              style={[styles.sizeButton, selectedSize === size && styles.selectedSize]}
+              style={[
+                styles.sizeButton,
+                selectedSize === size && styles.selectedSize,
+              ]}
               onPress={() => setSelectedSize(size)}
             >
-              <Text style={{ color: selectedSize === size ? "#fff" : "#000", fontWeight: "600" }}>
+              <Text
+                style={{
+                  color: selectedSize === size ? "#fff" : "#000",
+                  fontWeight: "600",
+                }}
+              >
                 {size}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
 
-        <TouchableOpacity style={[styles.addToBagButton, { opacity: selectedSize ? 1 : 0.6 }]} onPress={handleAddToBag}>
-          <Text style={styles.addToBagText}>Add to Bag 🛒</Text>
+        <TouchableOpacity
+          style={[
+            styles.addToBagButton,
+            { opacity: selectedSize ? 1 : 0.6 },
+          ]}
+          onPress={handleAddToBag}
+        >
+          <Text style={styles.addToBagText}>
+            Add to Bag 🛒
+          </Text>
         </TouchableOpacity>
       </Card>
 
       {recommended.length > 0 && (
         <View style={{ marginTop: 20, paddingLeft: 16 }}>
-          <Text style={[styles.recommendedTitle, { color: colors.text }]}>You may also like</Text>
+          <Text
+            style={[styles.recommendedTitle, { color: colors.text }]}
+          >
+            You may also like
+          </Text>
           <FlatList
             data={recommended}
-            keyExtractor={(item, index) => item._id || item.id || index.toString()}
+            keyExtractor={(item, index) =>
+              item._id || item.id || index.toString()
+            }
             horizontal
             showsHorizontalScrollIndicator={false}
             renderItem={renderRecommendedItem}
-            contentContainerStyle={{ paddingRight: 16, marginTop: 10 }}
+            contentContainerStyle={{
+              paddingRight: 16,
+              marginTop: 10,
+            }}
           />
         </View>
       )}
@@ -353,23 +429,97 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   imageWrapper: { position: "relative" },
   image: { width: "100%", height: 420 },
-  wishlistIcon: { position: "absolute", top: 20, right: 20, backgroundColor: "rgba(0,0,0,0.4)", padding: 8, borderRadius: 30 },
-  infoCard: { margin: 16, padding: 16, borderRadius: 16 },
+  wishlistIcon: {
+    position: "absolute",
+    top: 20,
+    right: 20,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    padding: 8,
+    borderRadius: 30,
+  },
+  infoCard: {
+    margin: 16,
+    padding: 16,
+    borderRadius: 16,
+  },
   brandText: { fontSize: 14 },
-  productName: { fontSize: 22, fontWeight: "700", marginVertical: 6 },
+  productName: {
+    fontSize: 22,
+    fontWeight: "700",
+    marginVertical: 6,
+  },
   description: { fontSize: 14, marginBottom: 12 },
-  priceRow: { flexDirection: "row", gap: 10, marginBottom: 14 },
-  finalPrice: { fontSize: 22, fontWeight: "700" },
-  offerText: { color: "#d32f2f", fontWeight: "700" },
-  selectSizeText: { marginBottom: 8, fontWeight: "600" },
-  sizeContainer: { flexDirection: "row", flexWrap: "wrap", marginBottom: 16 },
-  sizeButton: { borderWidth: 1, borderColor: "#000", borderRadius: 20, paddingVertical: 8, paddingHorizontal: 16, marginRight: 10, marginBottom: 10 },
-  selectedSize: { backgroundColor: "#e91e63", borderColor: "#e91e63" },
-  addToBagButton: { backgroundColor: "#e91e63", height: 56, borderRadius: 14, justifyContent: "center", alignItems: "center" },
-  addToBagText: { color: "#fff", fontSize: 16, fontWeight: "700" },
-  recommendedTitle: { fontSize: 18, fontWeight: "700" },
-  recommendedItem: { width: 140, marginRight: 12, borderRadius: 12, overflow: "hidden", backgroundColor: "#f5f5f5", paddingBottom: 8 },
-  recommendedImage: { width: "100%", height: 120, resizeMode: "cover" },
-  recommendedName: { marginTop: 6, fontSize: 14 },
-  recommendedPrice: { fontSize: 14, fontWeight: "700", marginTop: 2 },
+  priceRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 14,
+  },
+  finalPrice: {
+    fontSize: 22,
+    fontWeight: "700",
+  },
+  offerText: {
+    color: "#d32f2f",
+    fontWeight: "700",
+  },
+  selectSizeText: {
+    marginBottom: 8,
+    fontWeight: "600",
+  },
+  sizeContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginBottom: 16,
+  },
+  sizeButton: {
+    borderWidth: 1,
+    borderColor: "#000",
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    marginRight: 10,
+    marginBottom: 10,
+  },
+  selectedSize: {
+    backgroundColor: "#e91e63",
+    borderColor: "#e91e63",
+  },
+  addToBagButton: {
+    backgroundColor: "#e91e63",
+    height: 56,
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  addToBagText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  recommendedTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  recommendedItem: {
+    width: 140,
+    marginRight: 12,
+    borderRadius: 12,
+    overflow: "hidden",
+    backgroundColor: "#f5f5f5",
+    paddingBottom: 8,
+  },
+  recommendedImage: {
+    width: "100%",
+    height: 120,
+    resizeMode: "cover",
+  },
+  recommendedName: {
+    marginTop: 6,
+    fontSize: 14,
+  },
+  recommendedPrice: {
+    fontSize: 14,
+    fontWeight: "700",
+    marginTop: 2,
+  },
 });
