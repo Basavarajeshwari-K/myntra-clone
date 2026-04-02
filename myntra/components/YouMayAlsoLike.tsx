@@ -43,14 +43,19 @@ const YouMayAlsoLike: React.FC = () => {
       });
   }, []);
 
-  // Robust helper to get final image URL
+  // ✅ FIXED + SAFE IMAGE HANDLING
   const getFinalImage = (image?: string) => {
-  if (!image) return "https://via.placeholder.com/140";
-  if (image.startsWith("http")) return image;
+    if (!image) return "https://via.placeholder.com/140";
 
-  // Remove duplicate slashes
-  return `${BASE_URL}/${image.replace(/^\/+/, "")}`;
-};
+    // already full URL
+    if (image.startsWith("http")) return image;
+
+    // ensure correct path (VERY IMPORTANT)
+    const cleanPath = image.replace(/^\/+/, "");
+
+    return `${BASE_URL}/${cleanPath}`;
+  };
+
   if (loading) {
     return <ActivityIndicator size="large" color="#000" style={{ marginTop: 50 }} />;
   }
@@ -63,6 +68,9 @@ const YouMayAlsoLike: React.FC = () => {
       : item.price;
 
     const imageUrl = getFinalImage(item.image);
+
+    // ✅ DEBUG (check this in browser console on Netlify)
+    console.log("IMAGE URL:", imageUrl);
 
     return (
       <TouchableOpacity
@@ -82,7 +90,11 @@ const YouMayAlsoLike: React.FC = () => {
           })
         }
       >
-        <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="cover" />
+        <Image
+          source={{ uri: imageUrl }}
+          style={styles.image}
+          resizeMode="cover"
+        />
 
         <Text style={styles.brand}>{item.brand || "Unknown Brand"}</Text>
 

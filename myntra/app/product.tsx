@@ -148,7 +148,7 @@ export default function ProductDetail() {
     name: safeProduct.name,
     brand: safeProduct.brand,
     price: finalPrice,
-    image: safeProduct.image || "",
+    image: getImageUrl(safeProduct.image),
     size: selectedSize,
     qty: 1,
   };
@@ -291,7 +291,7 @@ const renderRecommendedItem = ({ item }: { item: FormattedProduct }) => {
               name: safeProduct.name,
               brand: safeProduct.brand,
               price: finalPrice,
-              image: safeProduct.image || "",
+              image: getImageUrl(safeProduct.image),
               offer: safeProduct.offer,
               description: safeProduct.description,
               sizes: safeProduct.sizes,
